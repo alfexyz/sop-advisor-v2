@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S&OP Advisor — Flexicom</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --brand:      #1a56db;
+      --brand-dark: #1041a8;
+      --sev-crit:   #dc2626;
+      --sev-warn:   #d97706;
+      --sev-info:   #0891b2;
+      --bg:         #f1f5f9;
+      --card-bg:    #ffffff;
+      --border:     #e2e8f0;
+      --text:       #1e293b;
+      --muted:      #64748b;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      font-size: 0.92rem;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: #0f172a;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 2px solid var(--brand);
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #f8fafc !important;
+      letter-spacing: -0.01em;
+    }
+    .navbar-brand span { color: #60a5fa; }
+    .nav-meta {
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    /* ── Section headers ── */
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Advisor card column ── */
+    .advisor-col-header {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px 8px 0 0;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+    .advisor-col-header.payment { background: #1e3a5f; }
+    .advisor-col-header.margin  { background: #3b1f00; }
+    .advisor-col-header.cash    { background: #0d3320; }
+
+    .advisor-col-header .headline-badge {
+      font-size: 0.72rem;
+      font-weight: 500;
+      background: rgba(255,255,255,0.18);
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: auto;
+    }
+
+    /* ── Alert cards ── */
+    .alert-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 0.9rem 1rem;
+      border-top: none;
+    }
+    .alert-card:last-child { border-radius: 0 0 8px 8px; }
+    .alert-card + .alert-card { border-top: 1px solid var(--border); }
+
+    .alert-card .sev-bar {
+      width: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+    .sev-bar.critical { background: var(--sev-crit); }
+    .sev-bar.warning  { background: var(--sev-warn); }
+    .sev-bar.info     { background: var(--sev-info); }
+
+    .alert-card .card-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+    .alert-card .card-body-text {
+      font-size: 0.8rem;
+      color: #334155;
+      line-height: 1.55;
+      margin-bottom: 0;
+    }
+
+    .metric-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .metric-badge.critical { background: #fef2f2; color: var(--sev-crit); border: 1px solid #fecaca; }
+    .metric-badge.warning  { background: #fffbeb; color: var(--sev-warn); border: 1px solid #fde68a; }
+    .metric-badge.info     { background: #ecfeff; color: var(--sev-info); border: 1px solid #a5f3fc; }
+
+    .summary-bar {
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 0.55rem 1rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      border-top: 1px dashed var(--border);
+    }
+
+    /* ── Charts ── */
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+    }
+    .chart-card .chart-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── What-If section ── */
+    #whatif-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.4rem 1.5rem;
+    }
+    #whatif-section h5 {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    #whatif-result {
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+      margin-top: 1.1rem;
+      display: none;
+      border-left: 4px solid var(--brand);
+      background: #f0f7ff;
+    }
+    #whatif-result.critical { border-color: var(--sev-crit); background: #fef2f2; }
+    #whatif-result.warning  { border-color: var(--sev-warn); background: #fffbeb; }
+    #whatif-result.info     { border-color: var(--sev-info); background: #ecfeff; }
+
+    #whatif-result .result-headline {
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-bottom: 0.4rem;
+    }
+    #whatif-result .result-body {
+      font-size: 0.82rem;
+      color: #334155;
+      line-height: 1.55;
+    }
+    #whatif-result .result-metrics {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 0.7rem;
+      flex-wrap: wrap;
+    }
+    #whatif-result .result-metric {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    #whatif-result .result-metric strong {
+      display: block;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    /* range slider */
+    .form-range::-webkit-slider-thumb { background: var(--brand); }
+    .form-range::-moz-range-thumb     { background: var(--brand); }
+
+    /* ── Misc ── */
+    .page-header {
+      padding: 1.1rem 0 0.6rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.3rem;
+    }
+    .page-header h1 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .page-header .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 1.5rem 0 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .advisor-cols { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <span class="navbar-brand">
+    <i class="bi bi-graph-up-arrow me-2"></i>S&amp;OP <span>Advisor</span>
+  </span>
+  <span class="nav-meta ms-auto">
+    Flexicom &nbsp;·&nbsp; Jan 2024 – Jun 2025 &nbsp;·&nbsp; Updated today
+  </span>
+</nav>
+
+<div class="container-fluid px-4 py-3">
+
+  <!-- ── Page header ── -->
+  <div class="page-header d-flex align-items-baseline gap-3">
+    <h1>Financial Intelligence Overview</h1>
+    <span class="sub">18-month analysis &nbsp;·&nbsp; Payment risk · Margin health · Cash position</span>
+  </div>
+
+  <!-- ── KPI summary row ── -->
+  {% set runway_color = {'healthy': '#059669', 'stable': '#0891b2', 'at_risk': '#d97706', 'critical': '#dc2626'} %}
+  {% set runway_bg    = {'healthy': '#f0fdf4', 'stable': '#ecfeff',  'at_risk': '#fffbeb',  'critical': '#fef2f2'} %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="chart-card text-center py-3">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem">Cash Balance</div>
+        <div style="font-size:1.6rem;font-weight:800;color:{{ runway_color[cash_summary.runway_label] }};line-height:1">
+          {{ "%.1f"|format(cash_summary.current_balance / 1_000_000) }}M
+          <span style="font-size:.85rem;font-weight:600">RON</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:.3rem">{{ cash_summary.runway_days }} days runway</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="chart-card text-center py-3">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem">Overdue Receivables</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#d97706;line-height:1">
+          {{ "%.0f"|format(cash_summary.overdue / 1_000) }}k
+          <span style="font-size:.85rem;font-weight:600">RON</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:.3rem">past due, not yet collected</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="chart-card text-center py-3">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem">Late Payment Risk</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#dc2626;line-height:1">
+          {{ cards.payment_risk.alerts | length }}
+          <span style="font-size:.85rem;font-weight:600">buyers</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:.3rem">flagged for follow-up</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="chart-card text-center py-3">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem">Cost Inflation Alerts</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;line-height:1">
+          {{ cards.margin.alerts | length }}
+          <span style="font-size:.85rem;font-weight:600">categories</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:.3rem">with rising supplier costs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       THREE ADVISOR COLUMNS
+  ════════════════════════════════════════════ -->
+  <div class="row g-3 mb-4">
+
+    <!-- ── 1. Payment Risk ── -->
+    <div class="col-12 col-xl-4">
+      <div class="advisor-col-header payment">
+        <i class="bi bi-shield-exclamation"></i>
+        Payment Risk
+        <span class="headline-badge">
+          {{ cards.payment_risk.alerts | length }} buyers flagged
+        </span>
+      </div>
+
+      {% for alert in cards.payment_risk.alerts %}
+      <div class="alert-card d-flex gap-2">
+        <div class="sev-bar {{ alert.severity }}"></div>
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+            <div class="card-title">{{ alert.title }}</div>
+            <span class="metric-badge {{ alert.severity }}">{{ alert.metric }}</span>
+          </div>
+          <p class="card-body-text">{{ alert.body }}</p>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="summary-bar">
+        <i class="bi bi-info-circle me-1"></i>{{ cards.payment_risk.summary }}
+      </div>
+    </div>
+
+    <!-- ── 2. Margin Alerts ── -->
+    <div class="col-12 col-xl-4">
+      <div class="advisor-col-header margin">
+        <i class="bi bi-arrow-up-right-circle"></i>
+        Margin Alerts
+        <span class="headline-badge">
+          {{ cards.margin.alerts | length }} categories affected
+        </span>
+      </div>
+
+      {% for alert in cards.margin.alerts %}
+      <div class="alert-card d-flex gap-2">
+        <div class="sev-bar {{ alert.severity }}"></div>
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+            <div class="card-title">{{ alert.title }}</div>
+            <span class="metric-badge {{ alert.severity }}">{{ alert.metric }}</span>
+          </div>
+          <p class="card-body-text">{{ alert.body }}</p>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="summary-bar">
+        <i class="bi bi-info-circle me-1"></i>{{ cards.margin.summary }}
+      </div>
+    </div>
+
+    <!-- ── 3. Cash Runway ── -->
+    <div class="col-12 col-xl-4">
+      <div class="advisor-col-header cash">
+        <i class="bi bi-cash-stack"></i>
+        Cash Runway
+        <span class="headline-badge">
+          {{ cash_summary.runway_days }}d runway
+        </span>
+      </div>
+
+      {% for alert in cards.cash_runway.alerts %}
+      <div class="alert-card d-flex gap-2">
+        <div class="sev-bar {{ alert.severity }}"></div>
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+            <div class="card-title">{{ alert.title }}</div>
+            <span class="metric-badge {{ alert.severity }}">{{ alert.metric }}</span>
+          </div>
+          <p class="card-body-text">{{ alert.body }}</p>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="summary-bar">
+        <i class="bi bi-info-circle me-1"></i>{{ cards.cash_runway.summary }}
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════════════
+       CHARTS ROW
+  ════════════════════════════════════════════ -->
+  <div class="row g-3 mb-4">
+
+    <!-- Margin trend chart -->
+    <div class="col-12 col-lg-7">
+      <div class="chart-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="chart-title">Unit Cost Trends by Category</div>
+          <div class="d-flex gap-1 flex-wrap justify-content-end" id="cat-toggle-btns">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+        <canvas id="marginChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Cash runway chart -->
+    <div class="col-12 col-lg-5">
+      <div class="chart-card">
+        <div class="chart-title">
+          90-Day Cash Projection
+          <span class="ms-2 text-muted fw-normal" style="font-size:0.7rem">
+            from {{ cash_summary.today }}
+          </span>
+        </div>
+        <canvas id="cashChart" height="200"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       WHAT-IF SIMULATOR
+  ════════════════════════════════════════════ -->
+  <div id="whatif-section" class="mb-4">
+    <div class="row align-items-start">
+      <div class="col-12 col-lg-4 mb-3 mb-lg-0">
+        <h5><i class="bi bi-sliders me-2 text-primary"></i>What-If Price Simulator</h5>
+        <p class="text-muted" style="font-size:0.82rem">
+          Model the margin impact of a supplier price increase before it happens.
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label fw-600" style="font-size:0.84rem">Product category</label>
+          <select class="form-select form-select-sm" id="sim-category">
+            {% for cat in categories %}
+            <option value="{{ cat }}"
+              {% if loop.first %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label fw-600" style="font-size:0.84rem">
+            Price increase: <span id="slider-label" class="text-primary fw-bold">10%</span>
+          </label>
+          <input type="range" class="form-range" id="sim-slider"
+                 min="1" max="50" value="10" step="1">
+          <div class="d-flex justify-content-between"
+               style="font-size:0.7rem;color:var(--muted);margin-top:2px">
+            <span>+1%</span><span>+25%</span><span>+50%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-8">
+        <div id="whatif-result">
+          <div class="result-headline" id="wr-headline"></div>
+          <div class="result-body"    id="wr-body"></div>
+          <div class="result-metrics">
+            <div class="result-metric">
+              <strong id="wr-current"></strong>Current unit cost
+            </div>
+            <div class="result-metric">
+              <strong id="wr-new"></strong>New unit cost
+            </div>
+            <div class="result-metric">
+              <strong id="wr-delta"></strong>Unit cost delta
+            </div>
+            <div class="result-metric">
+              <strong id="wr-annual"></strong>Annualised impact
+            </div>
+            <div class="result-metric">
+              <strong id="wr-passthru"></strong>Recommended price adj.
+            </div>
+          </div>
+        </div>
+        <div id="whatif-placeholder"
+             class="text-muted d-flex align-items-center justify-content-center"
+             style="height:120px;font-size:0.85rem;border:1px dashed var(--border);border-radius:6px">
+          <span><i class="bi bi-arrow-left me-2"></i>Adjust the slider to see impact</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  S&amp;OP Advisor &nbsp;·&nbsp; Flexicom &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; For internal use only
+</footer>
+
+<!-- ── Scripts ── -->
+<script>
+// ── Raw data from Flask ──
+const TREND_DATA   = {{ trend_by_cat | safe }};
+const CASH_DATA    = {{ cash_projection | safe }};
+
+// ── Colour palette ──
+const PALETTE = [
+  '#1a56db','#e11d48','#d97706','#059669','#7c3aed',
+  '#0891b2','#be185d','#65a30d','#9333ea','#0284c7',
+];
+
+// ═══════════════════════════════════════════
+// Margin trend chart
+// ═══════════════════════════════════════════
+const categories = Object.keys(TREND_DATA);
+let activeCategories = new Set(
+  categories.filter(c =>
+    ['Raw Materials','Electronics','Construction','Chemicals'].includes(c)
+  ).slice(0, 4)
+);
+
+// Build toggle buttons
+const btnContainer = document.getElementById('cat-toggle-btns');
+categories.forEach((cat, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-sm py-0 px-2';
+  btn.style.fontSize  = '0.68rem';
+  btn.style.border    = `1px solid ${PALETTE[i % PALETTE.length]}`;
+  btn.style.color     = activeCategories.has(cat) ? '#fff' : PALETTE[i % PALETTE.length];
+  btn.style.background = activeCategories.has(cat) ? PALETTE[i % PALETTE.length] : 'transparent';
+  btn.textContent = cat;
+  btn.dataset.cat = cat;
+  btn.dataset.color = PALETTE[i % PALETTE.length];
+  btn.addEventListener('click', () => {
+    if (activeCategories.has(cat)) {
+      if (activeCategories.size <= 1) return;
+      activeCategories.delete(cat);
+      btn.style.background = 'transparent';
+      btn.style.color      = btn.dataset.color;
+    } else {
+      activeCategories.add(cat);
+      btn.style.background = btn.dataset.color;
+      btn.style.color      = '#fff';
+    }
+    rebuildMarginChart();
+  });
+  btnContainer.appendChild(btn);
+});
+
+// Build all unique month labels
+const allMonths = [...new Set(
+  Object.values(TREND_DATA).flatMap(pts => pts.map(p => p.month))
+)].sort();
+
+function makeMarginDatasets() {
+  return categories
+    .filter(c => activeCategories.has(c))
+    .map((cat, i) => {
+      const rawColor = PALETTE[categories.indexOf(cat) % PALETTE.length];
+      const pts = TREND_DATA[cat] || [];
+      const priceMap = Object.fromEntries(pts.map(p => [p.month, p.price]));
+      return {
+        label:       cat,
+        data:        allMonths.map(m => priceMap[m] ?? null),
+        borderColor: rawColor,
+        backgroundColor: rawColor + '18',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension:     0.35,
+        spanGaps:    true,
+        fill:        false,
+      };
+    });
+}
+
+const marginCtx = document.getElementById('marginChart').getContext('2d');
+let marginChart = new Chart(marginCtx, {
+  type: 'line',
+  data: { labels: allMonths, datasets: makeMarginDatasets() },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(2)} RON`,
+        }
+      }
+    },
+    scales: {
+      x: { ticks: { maxTicksLimit: 10, font: { size: 10 } }, grid: { display: false } },
+      y: { ticks: { font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+    }
+  }
+});
+
+function rebuildMarginChart() {
+  marginChart.data.datasets = makeMarginDatasets();
+  marginChart.update();
+}
+
+// ═══════════════════════════════════════════
+// Cash runway chart
+// ═══════════════════════════════════════════
+const cashLabels = CASH_DATA.map(d => d.date);
+const cashValues = CASH_DATA.map(d => d.balance);
+const minBalance = Math.min(...cashValues);
+const maxBalance = Math.max(...cashValues);
+
+const cashCtx = document.getElementById('cashChart').getContext('2d');
+new Chart(cashCtx, {
+  type: 'line',
+  data: {
+    labels: cashLabels,
+    datasets: [{
+      label: 'Projected balance (RON)',
+      data:  cashValues,
+      borderColor: '#059669',
+      backgroundColor: ctx => {
+        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0,   'rgba(5,150,105,0.25)');
+        gradient.addColorStop(1,   'rgba(5,150,105,0.0)');
+        return gradient;
+      },
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+      fill: true,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${(ctx.parsed.y / 1000).toFixed(0)}k RON`,
+          title: ctx => ctx[0].label,
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          maxTicksLimit: 6,
+          font: { size: 10 },
+          callback: (_, i) => cashLabels[i]?.slice(5),  // show MM-DD only
+        },
+        grid: { display: false },
+      },
+      y: {
+        ticks: {
+          font: { size: 10 },
+          callback: v => (v / 1_000_000).toFixed(1) + 'M',
+        },
+        grid: { color: '#f1f5f9' },
+        suggestedMin: 0,
+      },
+    }
+  }
+});
+
+// ═══════════════════════════════════════════
+// What-If simulator
+// ═══════════════════════════════════════════
+const slider    = document.getElementById('sim-slider');
+const sliderLbl = document.getElementById('slider-label');
+const catSel    = document.getElementById('sim-category');
+const resultDiv = document.getElementById('whatif-result');
+const placeholder = document.getElementById('whatif-placeholder');
+
+let debounceTimer = null;
+
+function fmtRon(v) {
+  return new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' RON';
+}
+function fmtK(v) {
+  if (Math.abs(v) >= 1_000_000)
+    return (v / 1_000_000).toFixed(2) + 'M RON';
+  return new Intl.NumberFormat('ro-RO').format(Math.round(v)) + ' RON';
+}
+
+function runSimulation() {
+  const cat = catSel.value;
+  const pct = slider.value;
+
+  fetch(`/api/whatif?category=${encodeURIComponent(cat)}&increase=${pct}`)
+    .then(r => {
+      if (!r.ok) throw new Error(`Server error: ${r.status}`);
+      return r.json();
+    })
+    .then(d => {
+      if (d.error) {
+        console.error('What-If API error:', d.error);
+        return;
+      }
+
+      // Show result panel
+      placeholder.style.display = 'none';
+      resultDiv.style.display   = 'block';
+
+      // Severity styling
+      resultDiv.className = d.severity;
+
+      document.getElementById('wr-headline').textContent = d.headline;
+      document.getElementById('wr-body').textContent     = d.body;
+      document.getElementById('wr-current').textContent  = fmtRon(d.current_price_ron);
+      document.getElementById('wr-new').textContent      = fmtRon(d.new_price_ron);
+      document.getElementById('wr-delta').textContent    = '+' + fmtRon(d.price_delta_ron);
+      document.getElementById('wr-annual').textContent   = '~' + fmtK(d.estimated_annual_impact_ron);
+      document.getElementById('wr-passthru').textContent = '+' + d.recommended_selling_price_adj_pct + '%';
+    })
+    .catch(err => console.error('What-If simulation failed:', err));
+}
+
+function onSimChange() {
+  sliderLbl.textContent = '+' + slider.value + '%';
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(runSimulation, 250);
+}
+
+function syncChartToCategory(cat) {
+  activeCategories = new Set([cat]);
+  document.querySelectorAll('#cat-toggle-btns button').forEach(btn => {
+    const active = btn.dataset.cat === cat;
+    btn.style.background = active ? btn.dataset.color : 'transparent';
+    btn.style.color      = active ? '#fff' : btn.dataset.color;
+  });
+  rebuildMarginChart();
+}
+
+slider.addEventListener('input', onSimChange);
+slider.addEventListener('change', runSimulation);   // ensure update on mouse-release
+catSel.addEventListener('change', () => {
+  syncChartToCategory(catSel.value);
+  runSimulation();
+});
+
+// Run once on load with the default category/value
+window.addEventListener('DOMContentLoaded', () => {
+  syncChartToCategory(catSel.value);
+  runSimulation();
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

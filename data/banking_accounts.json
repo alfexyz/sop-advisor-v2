@@ -1,0 +1,20 @@
+[
+  {
+    "account_id": "RO49RNCB0000123456789001",
+    "owner": "RomDistrib SA",
+    "currency": "RON",
+    "opening_balance": 8500000.0,
+    "opening_date": "2024-01-01",
+    "bank_name": "Banca Comerciala Romana SA",
+    "bic": "RNCBROBU"
+  },
+  {
+    "account_id": "RO49RNCB0000123456789002",
+    "owner": "RomDistrib SA",
+    "currency": "EUR",
+    "opening_balance": 80000.0,
+    "opening_date": "2024-01-01",
+    "bank_name": "Banca Comerciala Romana SA",
+    "bic": "RNCBROBU"
+  }
+]
